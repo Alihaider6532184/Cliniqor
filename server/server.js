@@ -1,7 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const passport = require('passport');
-const cors = require('cors');
 const session = require('express-session');
 const authRoutes = require('./routes/auth.routes');
 const patientRoutes = require('./routes/patient.routes');
@@ -11,16 +10,22 @@ require('dotenv').config({ path: './.env' });
 
 const app = express();
 
-// Explicitly handle OPTIONS requests
-// This is a robust way to ensure preflight requests are handled correctly.
-app.options('*', cors()); 
+// Manual CORS Middleware - This is the definitive fix.
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', 'https://cliniqor-frontend.vercel.app');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
 
-// CORS Configuration
-const corsOptions = {
-  origin: '*', // Using wildcard for maximum compatibility during diagnostics
-  optionsSuccessStatus: 200
-};
-app.use(cors(corsOptions));
+  next();
+});
+
 
 // Body parser middleware
 app.use(express.json());
@@ -42,12 +47,13 @@ const db = process.env.MONGO_URI;
 mongoose
   .connect(db)
   .then(() => console.log('MongoDB Connected'))
-  .catch(err => console.log(err));
+  .catch(err => {
+    console.error('MongoDB Connection Error:', err);
+  });
 
 app.use('/api/auth', authRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/visits', visitRoutes);
 
-const port = process.env.PORT || 5000;
-
-app.listen(port, () => console.log(`Server running on port ${port}`)); 
+// Export the app for Vercel
+module.exports = app; 
