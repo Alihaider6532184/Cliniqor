@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const passport = require('passport');
+const cors = require('cors');
 const session = require('express-session');
 const authRoutes = require('./routes/auth.routes');
 const patientRoutes = require('./routes/patient.routes');
@@ -9,6 +10,9 @@ const visitRoutes = require('./routes/visit.routes');
 require('dotenv').config({ path: './.env' });
 
 const app = express();
+
+// Enable CORS with wildcard for debugging - this is the most permissive setting
+app.use(cors());
 
 // Body parser middleware
 app.use(express.json());
