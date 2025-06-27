@@ -1,70 +1,59 @@
 import React, { useState } from 'react';
-import { useNavigate, Link as RouterLink, Outlet } from 'react-router-dom';
-import { AppBar, Toolbar, Typography, Button, Menu, MenuItem, Box } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import {
+  AppBar, Toolbar, Typography, Button, Box, Fab,
+} from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 import PatientList from './PatientList';
 import PatientDialog from './PatientDialog';
 
-export default function Home() {
-  const navigate = useNavigate();
-
-  const [anchorElAccount, setAnchorElAccount] = useState(null);
+function Home() {
   const [open, setOpen] = useState(false);
   const [refresh, setRefresh] = useState(false);
-
-  const handleAccountMenuOpen = (event) => {
-    setAnchorElAccount(event.currentTarget);
-  };
-
-  const handleAccountMenuClose = () => {
-    setAnchorElAccount(null);
-  };
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     navigate('/login');
-    handleAccountMenuClose();
   };
 
   const handleClickOpen = () => {
     setOpen(true);
   };
 
+  const handleClose = () => {
+    setOpen(false);
+    setRefresh(!refresh); // Toggle refresh state to trigger PatientList update
+  };
+
   return (
-    <div>
+    <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static">
         <Toolbar>
-          <Typography variant="h6" component={RouterLink} to="/" sx={{ mr: 2, color: 'inherit', textDecoration: 'none' }}>
-            Doctor Dashboard
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            Patient Dashboard
           </Typography>
-          
-          <Box sx={{ flexGrow: 1 }} />
-
-          <Button 
-            color="inherit" 
-            onClick={handleAccountMenuOpen}
-            sx={{
-              '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              },
-              border: '1px solid transparent',
-              padding: '6px 16px'
-            }}
-          >
-            My Account
-          </Button>
-          <Menu
-            anchorEl={anchorElAccount}
-            open={Boolean(anchorElAccount)}
-            onClose={handleAccountMenuClose}
-          >
-            <MenuItem onClick={handleAccountMenuClose}>Switch Account</MenuItem>
-            <MenuItem onClick={handleLogout}>Logout</MenuItem>
-          </Menu>
+          <Button color="inherit" onClick={handleLogout}>Logout</Button>
         </Toolbar>
       </AppBar>
-      <main>
-        <Outlet />
-      </main>
-    </div>
+      <Box sx={{ p: 3 }}>
+        <PatientList key={refresh} />
+        <PatientDialog open={open} handleClose={handleClose} />
+        <Fab
+          color="primary"
+          aria-label="add"
+          sx={{
+            position: 'fixed',
+            bottom: 20,
+            right: 20,
+          }}
+          onClick={handleClickOpen}
+        >
+          <AddIcon />
+        </Fab>
+      </Box>
+    </Box>
   );
-} 
+}
+
+export default Home; 
