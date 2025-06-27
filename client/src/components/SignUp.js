@@ -1,47 +1,28 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { Avatar, Button, CssBaseline, TextField, Link, Grid, Box, Typography, Container } from '@mui/material';
+import api from '../api';
+import {
+  Avatar, Button, CssBaseline, TextField, Link, Grid, Box, Typography, Container, createTheme, ThemeProvider,
+} from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 const theme = createTheme();
 
-export default function SignUp() {
-  const [formData, setFormData] = useState({
-    username: '',
-    password: ''
-  });
-
+function SignUp() {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const navigate = useNavigate();
-  const { username, password } = formData;
 
-  const onChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
-
-  const onSubmit = async e => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     try {
-      const newUser = {
-        username,
-        password
-      };
-
-      const config = {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      };
-
-      const body = JSON.stringify(newUser);
-      
-      await axios.post('/api/auth/signup', body, config);
-
+      await api.post('/api/auth/signup', { name, email, password });
       alert('Signup successful! Please log in.');
       navigate('/login');
-
-    } catch (err) {
-      console.error(err.response.data);
-      alert('Error in signup. The user may already exist or password is too short.');
+    } catch (error) {
+      console.error('Sign up failed:', error.response ? error.response.data : error.message);
+      alert('Sign up failed. The user may already exist or the password is too short.');
     }
   };
 
@@ -63,19 +44,31 @@ export default function SignUp() {
           <Typography component="h1" variant="h5">
             Sign up
           </Typography>
-          <Box component="form" onSubmit={onSubmit} noValidate sx={{ mt: 3 }}>
+          <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 3 }}>
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <TextField
-                  autoComplete="username"
-                  name="username"
+                  autoComplete="name"
+                  name="name"
                   required
                   fullWidth
-                  id="username"
-                  label="Username"
+                  id="name"
+                  label="Name"
                   autoFocus
-                  value={username}
-                  onChange={onChange}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  required
+                  fullWidth
+                  id="email"
+                  label="Email Address"
+                  name="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -88,7 +81,7 @@ export default function SignUp() {
                   id="password"
                   autoComplete="new-password"
                   value={password}
-                  onChange={onChange}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
               </Grid>
             </Grid>
@@ -112,4 +105,6 @@ export default function SignUp() {
       </Container>
     </ThemeProvider>
   );
-} 
+}
+
+export default SignUp; 

@@ -6,6 +6,7 @@ import Home from './components/Home';
 import PrivateRoute from './components/PrivateRoute';
 import PatientList from './components/PatientList';
 import PatientDetail from './components/PatientDetail';
+import AuthCallback from './components/AuthCallback';
 import { Container, Typography, Grid, Card, CardActionArea, CardContent } from '@mui/material';
 import GroupIcon from '@mui/icons-material/Group';
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
@@ -18,6 +19,7 @@ function App() {
         {/* If not logged in, all roads lead to login */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
         
         {/* All protected routes are children of PrivateRoute */}
         <Route element={<PrivateRoute />}>

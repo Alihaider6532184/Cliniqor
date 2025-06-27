@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const passport = require('passport');
 const session = require('express-session');
 
-require('dotenv').config();
+require('dotenv').config({ path: './.env' });
 require('./config/passport'); // Load passport config
 
 const app = express();

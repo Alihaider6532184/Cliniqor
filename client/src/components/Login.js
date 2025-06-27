@@ -1,48 +1,29 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { Avatar, Button, CssBaseline, TextField, Link, Grid, Box, Typography, Container } from '@mui/material';
+import api from '../api';
+import {
+  Avatar, Button, CssBaseline, TextField, Link, Grid, Box, Typography, Container, createTheme, ThemeProvider,
+} from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 const theme = createTheme();
 
-export default function Login() {
-  const [formData, setFormData] = useState({
-    username: '',
-    password: ''
-  });
-
+function Login() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const navigate = useNavigate();
-  const { username, password } = formData;
 
-  const onChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
-
-  const onSubmit = async e => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     try {
-      const user = {
-        username,
-        password
-      };
-
-      const config = {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      };
-
-      const body = JSON.stringify(user);
-      const res = await axios.post('/api/auth/login', body, config);
-      
-      localStorage.setItem('token', res.data.token);
-
-      navigate('/dashboard');
-
-    } catch (err) {
-      console.error(err.response.data);
-      localStorage.removeItem('token');
-      alert('Invalid Credentials');
+      const response = await api.post('/api/auth/login', { email, password });
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        navigate('/home');
+      }
+    } catch (error) {
+      console.error('Login failed:', error.response ? error.response.data : error.message);
+      alert('Login failed. Please check your credentials.');
     }
   };
 
@@ -64,18 +45,18 @@ export default function Login() {
           <Typography component="h1" variant="h5">
             Sign in
           </Typography>
-          <Box component="form" onSubmit={onSubmit} noValidate sx={{ mt: 1 }}>
+          <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
             <TextField
               margin="normal"
               required
               fullWidth
-              id="username"
-              label="Username"
-              name="username"
-              autoComplete="username"
+              id="email"
+              label="Email Address"
+              name="email"
+              autoComplete="email"
               autoFocus
-              value={username}
-              onChange={onChange}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
             <TextField
               margin="normal"
@@ -87,7 +68,7 @@ export default function Login() {
               id="password"
               autoComplete="current-password"
               value={password}
-              onChange={onChange}
+              onChange={(e) => setPassword(e.target.value)}
             />
             <Button
               type="submit"
@@ -98,6 +79,11 @@ export default function Login() {
               Sign In
             </Button>
             <Grid container>
+              <Grid item xs>
+                <Link href="#" variant="body2">
+                  Forgot password?
+                </Link>
+              </Grid>
               <Grid item>
                 <Link href="/signup" variant="body2">
                   {"Don't have an account? Sign Up"}
@@ -109,4 +95,6 @@ export default function Login() {
       </Container>
     </ThemeProvider>
   );
-} 
+}
+
+export default Login; 
