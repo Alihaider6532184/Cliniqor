@@ -1,38 +1,49 @@
 const express = require('express');
-const cors = require('cors');
 const mongoose = require('mongoose');
 const passport = require('passport');
+const cors = require('cors');
 const session = require('express-session');
+const authRoutes = require('./routes/auth.routes');
+const patientRoutes = require('./routes/patient.routes');
+const visitRoutes = require('./routes/visit.routes');
 
 require('dotenv').config({ path: './.env' });
-require('./config/passport'); // Load passport config
 
 const app = express();
-const port = process.env.PORT || 5000;
 
-app.use(cors());
+// CORS Configuration
+const corsOptions = {
+  origin: 'https://cliniqor-frontend.vercel.app', // Your frontend URL
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
+
+// Body parser middleware
 app.use(express.json());
 
 // Session and Passport Middleware
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'a_default_secret_for_session', // Use an env variable
+  secret: process.env.SESSION_SECRET || 'default_session_secret',
   resave: false,
-  saveUninitialized: true,
+  saveUninitialized: true
 }));
 app.use(passport.initialize());
 app.use(passport.session());
+require('./config/passport')(passport);
 
-const uri = process.env.ATLAS_URI;
-mongoose.connect(uri);
-const connection = mongoose.connection;
-connection.once('open', () => {
-  console.log("MongoDB database connection established successfully");
-})
+// DB Config
+const db = process.env.MONGO_URI;
 
-app.use('/api/auth', require('./routes/auth.routes'));
-app.use('/api/patients', require('./routes/patient.routes'));
-app.use('/api/visits', require('./routes/visit.routes'));
+// Connect to MongoDB
+mongoose
+  .connect(db)
+  .then(() => console.log('MongoDB Connected'))
+  .catch(err => console.log(err));
 
-app.listen(port, () => {
-    console.log(`Server is running on port: ${port}`);
-}); 
+app.use('/api/auth', authRoutes);
+app.use('/api/patients', patientRoutes);
+app.use('/api/visits', visitRoutes);
+
+const port = process.env.PORT || 5000;
+
+app.listen(port, () => console.log(`Server running on port ${port}`)); 
