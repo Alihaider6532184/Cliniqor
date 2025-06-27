@@ -1,20 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate, Link as RouterLink, Outlet } from 'react-router-dom';
 import { AppBar, Toolbar, Typography, Button, Menu, MenuItem, Box } from '@mui/material';
+import PatientList from './PatientList';
+import PatientDialog from './PatientDialog';
 
 export default function Home() {
   const navigate = useNavigate();
 
-  const [anchorElPatients, setAnchorElPatients] = useState(null);
   const [anchorElAccount, setAnchorElAccount] = useState(null);
-
-  const handlePatientsMenuOpen = (event) => {
-    setAnchorElPatients(event.currentTarget);
-  };
-
-  const handlePatientsMenuClose = () => {
-    setAnchorElPatients(null);
-  };
+  const [open, setOpen] = useState(false);
+  const [refresh, setRefresh] = useState(false);
 
   const handleAccountMenuOpen = (event) => {
     setAnchorElAccount(event.currentTarget);
@@ -28,6 +23,10 @@ export default function Home() {
     localStorage.removeItem('token');
     navigate('/login');
     handleAccountMenuClose();
+  };
+
+  const handleClickOpen = () => {
+    setOpen(true);
   };
 
   return (

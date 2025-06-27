@@ -1,164 +1,175 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Grid,
-  Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Typography
+  Dialog, DialogActions, DialogContent, DialogTitle, Button, TextField, Grid, Box, Typography,
 } from '@mui/material';
-import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import AddIcon from '@mui/icons-material/Add';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
+import api from '../api';
 
-export default function VisitDialog({ open, onClose, onSave, visit }) {
-  const initialPrescriptionRow = { medicine: '', dose: '', frequency: '' };
+export default function VisitDialog({
+  open, onClose, patientId, onVisitSaved, visitData,
+}) {
+  const [date, setDate] = useState(dayjs());
   const [formData, setFormData] = useState({
-    date: dayjs(),
     presentingComplaint: '',
     previousHistory: '',
-    vitals: { hr: '', bp: '', rr: '', temp: '', bsr: '' },
-    physicalExamination: { general: '', cvs: '', resp: '', abd: '', neuro: '' },
-    prescription: Array(8).fill(null).map(() => ({ ...initialPrescriptionRow })),
+    vitals: {
+      hr: '', bp: '', rr: '', temp: '', bsr: '',
+    },
+    physicalExamination: {
+      general: '', cvs: '', resp: '', abd: '', neuro: '',
+    },
+    prescription: Array(8).fill({ medicine: '', dose: '', frequency: '' }),
   });
 
   useEffect(() => {
-    if (visit) {
-      // Logic for editing an existing visit
+    if (visitData) {
       setFormData({
-        date: dayjs(visit.date),
-        presentingComplaint: visit.presentingComplaint || '',
-        previousHistory: visit.previousHistory || '',
-        vitals: visit.vitals || { hr: '', bp: '', rr: '', temp: '', bsr: '' },
-        physicalExamination: visit.physicalExamination || { general: '', cvs: '', resp: '', abd: '', neuro: '' },
-        prescription: visit.prescription.length ? visit.prescription : Array(8).fill(null).map(() => ({ ...initialPrescriptionRow })),
+        presentingComplaint: visitData.presentingComplaint || '',
+        previousHistory: visitData.previousHistory || '',
+        vitals: visitData.vitals || {
+          hr: '', bp: '', rr: '', temp: '', bsr: '',
+        },
+        physicalExamination: visitData.physicalExamination || {
+          general: '', cvs: '', resp: '', abd: '', neuro: '',
+        },
+        prescription: visitData.prescription.length ? visitData.prescription : Array(8).fill({ medicine: '', dose: '', frequency: '' }),
       });
-    } else {
-      // Logic for adding a new visit
-      setFormData({
-        date: dayjs(),
-        presentingComplaint: '',
-        previousHistory: '',
-        vitals: { hr: '', bp: '', rr: '', temp: '', bsr: '' },
-        physicalExamination: { general: '', cvs: '', resp: '', abd: '', neuro: '' },
-        prescription: Array(8).fill(null).map(() => ({ ...initialPrescriptionRow })),
-      });
+      setDate(dayjs(visitData.date));
     }
-  }, [visit, open]);
+  }, [visitData]);
 
-  const handleChange = (e, section) => {
-    if (section === 'vitals' || section === 'physicalExamination') {
+  const handleChange = (e, section, index, field) => {
+    if (section === 'prescription') {
+      const newPrescription = [...formData.prescription];
+      newPrescription[index] = { ...newPrescription[index], [field]: e.target.value };
+      setFormData({ ...formData, prescription: newPrescription });
+    } else if (section) {
       setFormData({
         ...formData,
-        [section]: {
-          ...formData[section],
-          [e.target.name]: e.target.value
-        }
+        [section]: { ...formData[section], [e.target.name]: e.target.value },
       });
     } else {
       setFormData({ ...formData, [e.target.name]: e.target.value });
     }
   };
 
-  const handlePrescriptionChange = (e, index) => {
-    const updatedPrescription = [...formData.prescription];
-    updatedPrescription[index][e.target.name] = e.target.value;
-    setFormData({ ...formData, prescription: updatedPrescription });
-  };
-  
-  const addPrescriptionRow = () => {
-    setFormData({
+  const handleSave = async () => {
+    const visitPayload = {
       ...formData,
-      prescription: [...formData.prescription, { ...initialPrescriptionRow }]
-    });
-  };
+      date: date.toISOString(),
+      patient: patientId,
+    };
 
-  const handleDateChange = (newDate) => {
-    setFormData({ ...formData, date: newDate });
-  };
-
-  const handleSave = () => {
-    onSave(formData);
+    try {
+      if (visitData) {
+        // Update existing visit
+        await api.put(`/api/visits/${visitData._id}`, visitPayload);
+      } else {
+        // Create new visit
+        await api.post('/api/visits', visitPayload);
+      }
+      onVisitSaved();
+      onClose();
+    } catch (error) {
+      console.error('Failed to save visit:', error);
+    }
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
-      <DialogTitle>{visit ? 'Edit Visit' : 'Add New Visit'}</DialogTitle>
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
+      <DialogTitle>{visitData ? 'Edit Visit' : 'Add New Visit'}</DialogTitle>
       <DialogContent>
-        {/* Main Info */}
-        <Grid container spacing={2} sx={{ mt: 1 }}>
-          <Grid item xs={12} sm={4}>
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DatePicker
-                label="Visit Date"
-                value={formData.date}
-                onChange={handleDateChange}
-                enableAccessibleFieldDOMStructure={false}
+        {/* Date and Presenting Complaint */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+          <DatePicker label="Visit Date" value={date} onChange={(newDate) => setDate(newDate)} />
+          <TextField
+            label="Presenting Complaint"
+            name="presentingComplaint"
+            value={formData.presentingComplaint}
+            onChange={handleChange}
+            fullWidth
+            sx={{ ml: 2 }}
+          />
+        </Box>
+
+        {/* Previous History */}
+        <TextField
+          label="Previous Medical/Surgical History"
+          name="previousHistory"
+          value={formData.previousHistory}
+          onChange={handleChange}
+          fullWidth
+          multiline
+          rows={2}
+          sx={{ mb: 2 }}
+        />
+
+        {/* Vitals */}
+        <Typography variant="h6" gutterBottom>Vitals</Typography>
+        <Grid container spacing={2} sx={{ mb: 2 }}>
+          {Object.keys(formData.vitals).map((key) => (
+            <Grid item xs={12} sm={2.4} key={key}>
+              <TextField
+                label={key.toUpperCase()}
+                name={key}
+                value={formData.vitals[key]}
+                onChange={(e) => handleChange(e, 'vitals')}
+                fullWidth
               />
-            </LocalizationProvider>
-          </Grid>
-          <Grid item xs={12}>
-            <TextField label="P/C (Presenting Complaint)" name="presentingComplaint" value={formData.presentingComplaint} onChange={handleChange} fullWidth multiline rows={2}/>
-          </Grid>
-          <Grid item xs={12}>
-            <TextField label="Previous History" name="previousHistory" value={formData.previousHistory} onChange={handleChange} fullWidth multiline rows={2}/>
-          </Grid>
+            </Grid>
+          ))}
         </Grid>
 
-        {/* Vitals Section */}
-        <Paper variant="outlined" sx={{ p: 2, mt: 3 }}>
-          <Typography variant="h6" gutterBottom component="div" sx={{ fontWeight: 'bold' }}>
-            Vitals
-          </Typography>
-          <Grid container spacing={2}>
-            <Grid item xs={6} md={2}><TextField label="H.R" name="hr" value={formData.vitals.hr} onChange={(e) => handleChange(e, 'vitals')} fullWidth /></Grid>
-            <Grid item xs={6} md={2}><TextField label="B.P" name="bp" value={formData.vitals.bp} onChange={(e) => handleChange(e, 'vitals')} fullWidth /></Grid>
-            <Grid item xs={6} md={2}><TextField label="R.R" name="rr" value={formData.vitals.rr} onChange={(e) => handleChange(e, 'vitals')} fullWidth /></Grid>
-            <Grid item xs={6} md={2}><TextField label="Temp" name="temp" value={formData.vitals.temp} onChange={(e) => handleChange(e, 'vitals')} fullWidth /></Grid>
-            <Grid item xs={12} md={4}><TextField label="BSR" name="bsr" value={formData.vitals.bsr} onChange={(e) => handleChange(e, 'vitals')} fullWidth /></Grid>
-          </Grid>
-        </Paper>
+        {/* Physical Examination */}
+        <Typography variant="h6" gutterBottom>Physical Examination</Typography>
+        <Grid container spacing={2} sx={{ mb: 2 }}>
+          {Object.keys(formData.physicalExamination).map((key) => (
+            <Grid item xs={12} sm={2.4} key={key}>
+              <TextField
+                label={key.charAt(0).toUpperCase() + key.slice(1)}
+                name={key}
+                value={formData.physicalExamination[key]}
+                onChange={(e) => handleChange(e, 'physicalExamination')}
+                fullWidth
+              />
+            </Grid>
+          ))}
+        </Grid>
 
-        {/* Physical Examination Section */}
-        <Paper variant="outlined" sx={{ p: 2, mt: 3 }}>
-          <Typography variant="h6" gutterBottom component="div" sx={{ fontWeight: 'bold' }}>
-            Physical Examination
-          </Typography>
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={4}><TextField label="General Physical" name="general" value={formData.physicalExamination.general} onChange={(e) => handleChange(e, 'physicalExamination')} fullWidth /></Grid>
-            <Grid item xs={12} md={4}><TextField label="CVS" name="cvs" value={formData.physicalExamination.cvs} onChange={(e) => handleChange(e, 'physicalExamination')} fullWidth /></Grid>
-            <Grid item xs={12} md={4}><TextField label="Resp." name="resp" value={formData.physicalExamination.resp} onChange={(e) => handleChange(e, 'physicalExamination')} fullWidth /></Grid>
-            <Grid item xs={12} md={6}><TextField label="Abd." name="abd" value={formData.physicalExamination.abd} onChange={(e) => handleChange(e, 'physicalExamination')} fullWidth /></Grid>
-            <Grid item xs={12} md={6}><TextField label="Neuro" name="neuro" value={formData.physicalExamination.neuro} onChange={(e) => handleChange(e, 'physicalExamination')} fullWidth /></Grid>
-          </Grid>
-        </Paper>
+        {/* Prescription */}
+        <Typography variant="h6" gutterBottom>Rx</Typography>
+        <Grid container spacing={1}>
+          <Grid item xs={4}><Typography>Medicine</Typography></Grid>
+          <Grid item xs={4}><Typography>Dose</Typography></Grid>
+          <Grid item xs={4}><Typography>Frequency</Typography></Grid>
+          {formData.prescription.map((row, index) => (
+            <React.Fragment key={index}>
+              <Grid item xs={4}>
+                <TextField
+                  value={row.medicine}
+                  onChange={(e) => handleChange(e, 'prescription', index, 'medicine')}
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={4}>
+                <TextField
+                  value={row.dose}
+                  onChange={(e) => handleChange(e, 'prescription', index, 'dose')}
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={4}>
+                <TextField
+                  value={row.frequency}
+                  onChange={(e) => handleChange(e, 'prescription', index, 'frequency')}
+                  fullWidth
+                />
+              </Grid>
+            </React.Fragment>
+          ))}
+        </Grid>
 
-        {/* Prescription Section */}
-        <Paper variant="outlined" sx={{ p: 2, mt: 3 }}>
-          <Typography variant="h6" gutterBottom component="div" sx={{ fontWeight: 'bold' }}>
-            Rx (Prescription)
-          </Typography>
-          <TableContainer>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Medicine</TableCell>
-                  <TableCell>Dose</TableCell>
-                  <TableCell>Frequency</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {formData.prescription.map((row, index) => (
-                  <TableRow key={index}>
-                    <TableCell><TextField name="medicine" value={row.medicine} onChange={(e) => handlePrescriptionChange(e, index)} fullWidth variant="standard" /></TableCell>
-                    <TableCell><TextField name="dose" value={row.dose} onChange={(e) => handlePrescriptionChange(e, index)} fullWidth variant="standard" /></TableCell>
-                    <TableCell><TextField name="frequency" value={row.frequency} onChange={(e) => handlePrescriptionChange(e, index)} fullWidth variant="standard" /></TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <Button startIcon={<AddIcon />} onClick={addPrescriptionRow} sx={{ mt: 1 }}>
-            Add Row
-          </Button>
-        </Paper>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
