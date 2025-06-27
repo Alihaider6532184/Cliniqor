@@ -10,23 +10,6 @@ require('dotenv').config({ path: './.env' });
 
 const app = express();
 
-// Manual CORS Middleware - This is the definitive fix.
-app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', 'https://cliniqor-frontend.vercel.app');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-
-  next();
-});
-
-
 // Body parser middleware
 app.use(express.json());
 
@@ -55,5 +38,5 @@ app.use('/api/auth', authRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/visits', visitRoutes);
 
-// Export the app for Vercel
+// Vercel will handle the port
 module.exports = app; 
