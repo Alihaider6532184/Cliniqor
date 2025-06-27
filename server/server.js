@@ -11,8 +11,16 @@ require('dotenv').config({ path: './.env' });
 
 const app = express();
 
-// Enable CORS with wildcard for debugging - this is the most permissive setting
-app.use(cors());
+// Explicitly handle OPTIONS requests
+// This is a robust way to ensure preflight requests are handled correctly.
+app.options('*', cors()); 
+
+// CORS Configuration
+const corsOptions = {
+  origin: '*', // Using wildcard for maximum compatibility during diagnostics
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
 
 // Body parser middleware
 app.use(express.json());
