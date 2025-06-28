@@ -75,7 +75,7 @@ export default function VisitDialog({ open, onClose, onSave }) {
           label="Visit Date & Time"
           value={formData.date}
           onChange={handleDateChange}
-          slots={{ textField: (params) => <TextField {...params} margin="normal" fullWidth /> }}
+          slots={{ textField: (params) => <TextField {...params} fullWidth margin="normal" /> }}
         />
 
         <Typography variant="h6" sx={{ mt: 2 }}>Vitals</Typography>
