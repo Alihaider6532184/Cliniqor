@@ -16,58 +16,20 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* If not logged in, all roads lead to login */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         
-        {/* All protected routes are children of PrivateRoute */}
         <Route element={<PrivateRoute />}>
-          <Route path="/" element={<Home />}>
-            {/* The dashboard's index page */}
-            <Route index element={
-              <Container sx={{ mt: 4 }}>
-                <Grid container spacing={4} justifyContent="center">
-                  <Grid xs={12} sm={6} md={4}>
-                    <Card sx={{
-                      transition: '0.3s',
-                      '&:hover': { transform: 'scale(1.05)' }
-                    }}>
-                      <CardActionArea component={RouterLink} to="/patients/opd">
-                        <CardContent sx={{ textAlign: 'center', p: 4 }}>
-                          <GroupIcon sx={{ fontSize: 60, color: 'primary.main' }} />
-                          <Typography gutterBottom variant="h5" component="div" sx={{ mt: 2 }}>
-                            OPD Patients
-                          </Typography>
-                        </CardContent>
-                      </CardActionArea>
-                    </Card>
-                  </Grid>
-                  <Grid xs={12} sm={6} md={4}>
-                    <Card sx={{
-                      transition: '0.3s',
-                      '&:hover': { transform: 'scale(1.05)' }
-                    }}>
-                      <CardActionArea component={RouterLink} to="/patients/ward">
-                        <CardContent sx={{ textAlign: 'center', p: 4 }}>
-                          <LocalHospitalIcon sx={{ fontSize: 60, color: 'secondary.main' }} />
-                          <Typography gutterBottom variant="h5" component="div" sx={{ mt: 2 }}>
-                            Ward/Hospital Patients
-                          </Typography>
-                        </CardContent>
-                      </CardActionArea>
-                    </Card>
-                  </Grid>
-                </Grid>
-              </Container>
-            } />
-            <Route path="patients/:category" element={<PatientList />} />
-            <Route path="patient/:id" element={<PatientDetail />} />
-          </Route>
+          <Route path="/home" element={<Home />} />
+          <Route path="/patients/:category" element={<PatientList />} />
+          <Route path="/patient/:id" element={<PatientDetail />} />
+          {/* Redirect root to /home for logged-in users */}
+          <Route path="/" element={<Navigate to="/home" />} />
         </Route>
 
-        {/* Redirect any other path to the root */}
-        <Route path="*" element={<Navigate to="/" />} />
+        {/* Redirect any other path to the login page */}
+        <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
     </Router>
   );
