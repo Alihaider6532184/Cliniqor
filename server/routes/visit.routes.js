@@ -7,7 +7,7 @@ const visitController = require('../controllers/visit.controller');
 // @route   GET api/visits/:patientId
 // @desc    Get all visits for a patient
 // @access  Private
-router.get('/:patientId', auth, visitController.getVisits);
+router.get('/:patientId', auth.protect, visitController.getVisits);
 
 // @route   POST api/visits/:patientId
 // @desc    Add new visit for a patient
@@ -15,7 +15,7 @@ router.get('/:patientId', auth, visitController.getVisits);
 router.post(
   '/:patientId',
   [
-    auth,
+    auth.protect,
     [
       check('date', 'Date is required').not().isEmpty(),
     ]

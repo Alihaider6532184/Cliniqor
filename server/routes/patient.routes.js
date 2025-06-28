@@ -7,12 +7,12 @@ const patientController = require('../controllers/patient.controller');
 // @route   GET api/patients/details/:id
 // @desc    Get single patient by ID
 // @access  Private
-router.get('/details/:id', auth, patientController.getPatientById);
+router.get('/details/:id', auth.protect, patientController.getPatientById);
 
 // @route   GET api/patients/:category
 // @desc    Get all patients for a doctor
 // @access  Private
-router.get('/:category', auth, patientController.getPatients);
+router.get('/:category', auth.protect, patientController.getPatients);
 
 // @route   POST api/patients
 // @desc    Add new patient
@@ -20,7 +20,7 @@ router.get('/:category', auth, patientController.getPatients);
 router.post(
   '/',
   [
-    auth,
+    auth.protect,
     [
       check('name', 'Name is required').not().isEmpty(),
       check('caseSummary', 'Case summary is required').not().isEmpty(),
@@ -33,11 +33,11 @@ router.post(
 // @route   PUT api/patients/:id
 // @desc    Update patient
 // @access  Private
-router.put('/:id', auth, patientController.updatePatient);
+router.put('/:id', auth.protect, patientController.updatePatient);
 
 // @route   DELETE api/patients/:id
 // @desc    Delete patient
 // @access  Private
-router.delete('/:id', auth, patientController.deletePatient);
+router.delete('/:id', auth.protect, patientController.deletePatient);
 
 module.exports = router; 
