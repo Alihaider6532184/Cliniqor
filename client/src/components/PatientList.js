@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
 import axios from 'axios';
 import {
   Container, Typography, Box, List, ListItem, ListItemText,
-  IconButton, Fab, CircularProgress, Divider, ListItemButton, TextField, Button
+  IconButton, Fab, CircularProgress, Divider, ListItemButton, TextField, Button, AppBar, Toolbar
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -108,28 +108,25 @@ export default function PatientList() {
 
   return (
     <Box>
-      <Container>
-        <Box sx={{ display: 'flex', alignItems: 'center', mt: 4, mb: 2 }}>
-          <Button
-            variant="outlined"
-            startIcon={<ArrowBackIcon />}
-            onClick={() => navigate('/home')}
-            sx={{ mr: 2 }}
-          >
-            Back
-          </Button>
-          <Typography variant="h4" component="h1">
+      <AppBar position="static">
+        <Toolbar>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             {category && category.charAt(0).toUpperCase() + category.slice(1)} Patients
           </Typography>
+          <Button color="inherit" onClick={() => navigate('/home')}>Back</Button>
+        </Toolbar>
+      </AppBar>
+      <Container>
+        <Box sx={{ my: 4 }}>
+          <TextField
+            fullWidth
+            label="Search by Patient Name"
+            variant="outlined"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            sx={{ mb: 2 }}
+          />
         </Box>
-        <TextField
-          fullWidth
-          label="Search by Patient Name"
-          variant="outlined"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          sx={{ mb: 2 }}
-        />
         <List>
           {filteredPatients.map((patient, index) => (
             <React.Fragment key={patient._id}>
