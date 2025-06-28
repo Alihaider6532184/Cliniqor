@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 
 exports.signup = async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { name, email, password } = req.body;
 
         let user = await User.findOne({ email });
         if (user) {
@@ -12,6 +12,7 @@ exports.signup = async (req, res) => {
         }
 
         user = new User({
+            name,
             email,
             password,
         });
