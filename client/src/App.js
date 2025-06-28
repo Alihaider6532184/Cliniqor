@@ -7,10 +7,6 @@ import PrivateRoute from './components/PrivateRoute';
 import PatientList from './components/PatientList';
 import PatientDetail from './components/PatientDetail';
 import AuthCallback from './components/AuthCallback';
-import { Container, Typography, Grid, Card, CardActionArea, CardContent } from '@mui/material';
-import GroupIcon from '@mui/icons-material/Group';
-import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
-import { Link as RouterLink } from 'react-router-dom';
 
 function App() {
   return (
