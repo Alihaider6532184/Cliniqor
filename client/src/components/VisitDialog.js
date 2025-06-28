@@ -1,180 +1,116 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
-  Dialog, DialogActions, DialogContent, DialogTitle, Button, TextField, Grid, Box, Typography,
+  Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField,
+  Grid, Typography, Box
 } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import dayjs from 'dayjs';
-import api from '../api';
 
-export default function VisitDialog({
-  open, onClose, patientId, onVisitSaved, visitData,
-}) {
-  const [date, setDate] = useState(dayjs());
-  const [formData, setFormData] = useState({
-    presentingComplaint: '',
-    previousHistory: '',
-    vitals: {
-      hr: '', bp: '', rr: '', temp: '', bsr: '',
-    },
-    physicalExamination: {
-      general: '', cvs: '', resp: '', abd: '', neuro: '',
-    },
-    prescription: Array(8).fill({ medicine: '', dose: '', frequency: '' }),
-  });
+const initialState = {
+  date: dayjs(),
+  vitals: {
+    bp: '',
+    pulse: '',
+    temp: '',
+    spo2: ''
+  },
+  examination: {
+    general: '',
+    chest: '',
+    cvs: '',
+    cns: ''
+  },
+  investigations: [''],
+  prescription: [''],
+};
 
-  useEffect(() => {
-    if (visitData) {
-      setFormData({
-        presentingComplaint: visitData.presentingComplaint || '',
-        previousHistory: visitData.previousHistory || '',
-        vitals: visitData.vitals || {
-          hr: '', bp: '', rr: '', temp: '', bsr: '',
-        },
-        physicalExamination: visitData.physicalExamination || {
-          general: '', cvs: '', resp: '', abd: '', neuro: '',
-        },
-        prescription: visitData.prescription.length ? visitData.prescription : Array(8).fill({ medicine: '', dose: '', frequency: '' }),
-      });
-      setDate(dayjs(visitData.date));
-    }
-  }, [visitData]);
+export default function VisitDialog({ open, onClose, onSave }) {
+  const [formData, setFormData] = useState(initialState);
 
-  const handleChange = (e, section, index, field) => {
-    if (section === 'prescription') {
-      const newPrescription = [...formData.prescription];
-      newPrescription[index] = { ...newPrescription[index], [field]: e.target.value };
-      setFormData({ ...formData, prescription: newPrescription });
-    } else if (section) {
+  const handleDateChange = (newDate) => {
+    setFormData({ ...formData, date: newDate });
+  };
+
+  const handleChange = (e, category) => {
+    const { name, value } = e.target;
+    if (category) {
       setFormData({
         ...formData,
-        [section]: { ...formData[section], [e.target.name]: e.target.value },
+        [category]: {
+          ...formData[category],
+          [name]: value
+        }
       });
     } else {
-      setFormData({ ...formData, [e.target.name]: e.target.value });
+      setFormData({ ...formData, [name]: value });
     }
   };
 
-  const handleSave = async () => {
-    const visitPayload = {
-      ...formData,
-      date: date.toISOString(),
-      patient: patientId,
-    };
+  const handleArrayChange = (e, index, field) => {
+    const newArray = [...formData[field]];
+    newArray[index] = e.target.value;
+    setFormData({ ...formData, [field]: newArray });
+  };
 
-    try {
-      if (visitData) {
-        // Update existing visit
-        await api.put(`/api/visits/${visitData._id}`, visitPayload);
-      } else {
-        // Create new visit
-        await api.post('/api/visits', visitPayload);
-      }
-      onVisitSaved();
-      onClose();
-    } catch (error) {
-      console.error('Failed to save visit:', error);
-    }
+  const addArrayField = (field) => {
+    setFormData({ ...formData, [field]: [...formData[field], ''] });
+  };
+
+  const handleSave = () => {
+    const dataToSave = {
+      ...formData,
+      date: formData.date.toISOString(),
+      investigations: formData.investigations.filter(inv => inv),
+      prescription: formData.prescription.filter(pre => pre),
+    };
+    onSave(dataToSave);
+    setFormData(initialState); // Reset form after saving
   };
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-      <DialogTitle>{visitData ? 'Edit Visit' : 'Add New Visit'}</DialogTitle>
+      <DialogTitle>Add New Visit</DialogTitle>
       <DialogContent>
-        {/* Date and Presenting Complaint */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-          <DatePicker label="Visit Date" value={date} onChange={(newDate) => setDate(newDate)} />
-          <TextField
-            label="Presenting Complaint"
-            name="presentingComplaint"
-            value={formData.presentingComplaint}
-            onChange={handleChange}
-            fullWidth
-            sx={{ ml: 2 }}
-          />
-        </Box>
-
-        {/* Previous History */}
-        <TextField
-          label="Previous Medical/Surgical History"
-          name="previousHistory"
-          value={formData.previousHistory}
-          onChange={handleChange}
-          fullWidth
-          multiline
-          rows={2}
-          sx={{ mb: 2 }}
+        <DateTimePicker
+          label="Visit Date & Time"
+          value={formData.date}
+          onChange={handleDateChange}
+          slots={{ textField: (params) => <TextField {...params} margin="normal" fullWidth /> }}
         />
 
-        {/* Vitals */}
-        <Typography variant="h6" gutterBottom>Vitals</Typography>
-        <Grid container spacing={2} sx={{ mb: 2 }}>
-          {Object.keys(formData.vitals).map((key) => (
-            <Grid item xs={12} sm={2.4} key={key}>
-              <TextField
-                label={key.toUpperCase()}
-                name={key}
-                value={formData.vitals[key]}
-                onChange={(e) => handleChange(e, 'vitals')}
-                fullWidth
-              />
-            </Grid>
-          ))}
+        <Typography variant="h6" sx={{ mt: 2 }}>Vitals</Typography>
+        <Grid container spacing={2}>
+          <Grid item xs={6} sm={3}><TextField label="BP (e.g., 120/80)" name="bp" value={formData.vitals.bp} onChange={(e) => handleChange(e, 'vitals')} fullWidth margin="dense" /></Grid>
+          <Grid item xs={6} sm={3}><TextField label="Pulse (bpm)" name="pulse" value={formData.vitals.pulse} onChange={(e) => handleChange(e, 'vitals')} fullWidth margin="dense" /></Grid>
+          <Grid item xs={6} sm={3}><TextField label="Temp (°F)" name="temp" value={formData.vitals.temp} onChange={(e) => handleChange(e, 'vitals')} fullWidth margin="dense" /></Grid>
+          <Grid item xs={6} sm={3}><TextField label="SpO2 (%)" name="spo2" value={formData.vitals.spo2} onChange={(e) => handleChange(e, 'vitals')} fullWidth margin="dense" /></Grid>
         </Grid>
 
-        {/* Physical Examination */}
-        <Typography variant="h6" gutterBottom>Physical Examination</Typography>
-        <Grid container spacing={2} sx={{ mb: 2 }}>
-          {Object.keys(formData.physicalExamination).map((key) => (
-            <Grid item xs={12} sm={2.4} key={key}>
-              <TextField
-                label={key.charAt(0).toUpperCase() + key.slice(1)}
-                name={key}
-                value={formData.physicalExamination[key]}
-                onChange={(e) => handleChange(e, 'physicalExamination')}
-                fullWidth
-              />
-            </Grid>
-          ))}
+        <Typography variant="h6" sx={{ mt: 2 }}>Physical Examination</Typography>
+        <Grid container spacing={2}>
+          <Grid item xs={12}><TextField label="General" name="general" value={formData.examination.general} onChange={(e) => handleChange(e, 'examination')} fullWidth margin="dense" multiline rows={2} /></Grid>
+          <Grid item xs={6}><TextField label="Chest" name="chest" value={formData.examination.chest} onChange={(e) => handleChange(e, 'examination')} fullWidth margin="dense" /></Grid>
+          <Grid item xs={6}><TextField label="CVS (Cardiovascular)" name="cvs" value={formData.examination.cvs} onChange={(e) => handleChange(e, 'examination')} fullWidth margin="dense" /></Grid>
+          <Grid item xs={6}><TextField label="CNS (Central Nervous)" name="cns" value={formData.examination.cns} onChange={(e) => handleChange(e, 'examination')} fullWidth margin="dense" /></Grid>
         </Grid>
 
-        {/* Prescription */}
-        <Typography variant="h6" gutterBottom>Rx</Typography>
-        <Grid container spacing={1}>
-          <Grid item xs={4}><Typography>Medicine</Typography></Grid>
-          <Grid item xs={4}><Typography>Dose</Typography></Grid>
-          <Grid item xs={4}><Typography>Frequency</Typography></Grid>
-          {formData.prescription.map((row, index) => (
-            <React.Fragment key={index}>
-              <Grid item xs={4}>
-                <TextField
-                  value={row.medicine}
-                  onChange={(e) => handleChange(e, 'prescription', index, 'medicine')}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={4}>
-                <TextField
-                  value={row.dose}
-                  onChange={(e) => handleChange(e, 'prescription', index, 'dose')}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={4}>
-                <TextField
-                  value={row.frequency}
-                  onChange={(e) => handleChange(e, 'prescription', index, 'frequency')}
-                  fullWidth
-                />
-              </Grid>
-            </React.Fragment>
-          ))}
-        </Grid>
+        <Typography variant="h6" sx={{ mt: 2 }}>Investigations</Typography>
+        {formData.investigations.map((inv, index) => (
+          <TextField key={index} label={`Investigation ${index + 1}`} value={inv} onChange={(e) => handleArrayChange(e, index, 'investigations')} fullWidth margin="dense" />
+        ))}
+        <Button onClick={() => addArrayField('investigations')} sx={{ mt: 1 }}>Add Investigation</Button>
+        
+        <Typography variant="h6" sx={{ mt: 2 }}>Prescription</Typography>
+        {formData.prescription.map((pre, index) => (
+          <TextField key={index} label={`Medication ${index + 1}`} value={pre} onChange={(e) => handleArrayChange(e, index, 'prescription')} fullWidth margin="dense" />
+        ))}
+        <Button onClick={() => addArrayField('prescription')} sx={{ mt: 1 }}>Add Medication</Button>
 
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
-        <Button onClick={handleSave} variant="contained">Save Visit</Button>
+        <Button onClick={handleSave}>Save</Button>
       </DialogActions>
     </Dialog>
   );
-} 
+}
