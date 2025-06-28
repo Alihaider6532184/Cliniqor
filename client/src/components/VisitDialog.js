@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField,
-  Grid, Typography, Box
+  Grid, Typography
 } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import dayjs from 'dayjs';
