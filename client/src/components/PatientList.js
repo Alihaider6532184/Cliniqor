@@ -50,7 +50,7 @@ export default function PatientList() {
   }, [category]);
 
   const filteredPatients = patients.filter(patient =>
-    patient.name.toLowerCase().includes(searchTerm.toLowerCase())
+    patient.name && patient.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleOpenDialog = (patient = null) => {
@@ -119,7 +119,7 @@ export default function PatientList() {
             Back
           </Button>
           <Typography variant="h4" component="h1">
-            {category.charAt(0).toUpperCase() + category.slice(1)} Patients
+            {category && category.charAt(0).toUpperCase() + category.slice(1)} Patients
           </Typography>
         </Box>
         <TextField
