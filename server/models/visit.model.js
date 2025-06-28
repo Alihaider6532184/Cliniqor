@@ -1,11 +1,17 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const VisitSchema = new Schema({
+const prescriptionSchema = new Schema({
+  medicine: { type: String, required: true },
+  dose: { type: String, required: true },
+  frequency: { type: String, required: true },
+}, { _id: false });
+
+const visitSchema = new Schema({
   patient: {
     type: Schema.Types.ObjectId,
     ref: 'Patient',
-    required: true
+    required: true,
   },
   doctor: {
     type: Schema.Types.ObjectId,
@@ -14,15 +20,16 @@ const VisitSchema = new Schema({
   },
   date: {
     type: Date,
-    required: true
+    required: true,
+    default: Date.now,
   },
   presentingComplaint: {
     type: String,
-    default: ''
+    default: '',
   },
   previousHistory: {
     type: String,
-    default: ''
+    default: '',
   },
   vitals: {
     hr: { type: String, default: '' },
@@ -38,14 +45,11 @@ const VisitSchema = new Schema({
     abd: { type: String, default: '' },
     neuro: { type: String, default: '' },
   },
-  prescription: [ // Rx
-    {
-      medicine: { type: String, default: '' },
-      dose: { type: String, default: '' },
-      frequency: { type: String, default: '' },
-    }
-  ],
-  // The old 'notes' field is now replaced by the more specific fields above
+  prescription: [prescriptionSchema],
+}, {
+  timestamps: true,
 });
 
-module.exports = mongoose.model('Visit', VisitSchema); 
+const Visit = mongoose.model('Visit', visitSchema);
+
+module.exports = Visit; 

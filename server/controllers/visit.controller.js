@@ -11,31 +11,36 @@ exports.createVisit = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { date, presentingComplaint, previousHistory, vitals, physicalExamination, prescription } = req.body;
+  const {
+    date,
+    presentingComplaint,
+    previousHistory,
+    vitals,
+    physicalExamination,
+    prescription,
+  } = req.body;
   const { patientId } = req.params;
 
   try {
-    // Check if patient exists and belongs to the doctor
     const patient = await Patient.findById(patientId);
-    if (!patient || patient.doctor.toString() !== req.user.id) {
-      return res.status(404).json({ msg: 'Patient not found or not authorized' });
+    if (!patient) {
+      return res.status(404).json({ msg: 'Patient not found' });
     }
-    
+
     const newVisit = new Visit({
+      patient: req.params.patientId,
       date,
       presentingComplaint,
       previousHistory,
       vitals,
       physicalExamination,
       prescription,
-      patient: patientId,
-      doctor: req.user.id,
     });
 
     const visit = await newVisit.save();
 
-    // Add visit to patient's visit array
-    patient.visits.push(visit.id);
+    // Add visit reference to patient's record
+    patient.visits.unshift(visit._id);
     await patient.save();
 
     res.json(visit);
@@ -50,12 +55,6 @@ exports.createVisit = async (req, res) => {
 // @access  Private
 exports.getVisits = async (req, res) => {
   try {
-    // Check if patient exists and belongs to the doctor
-    const patient = await Patient.findById(req.params.patientId);
-    if (!patient || patient.doctor.toString() !== req.user.id) {
-      return res.status(404).json({ msg: 'Patient not found or not authorized' });
-    }
-
     const visits = await Visit.find({ patient: req.params.patientId }).sort({ date: -1 });
     res.json(visits);
   } catch (err) {

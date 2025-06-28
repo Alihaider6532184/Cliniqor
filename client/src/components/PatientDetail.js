@@ -88,11 +88,29 @@ function PatientDetail() {
                 <Typography>Visit on {dayjs(visit.date).format('DD MMM YYYY, hh:mm A')}</Typography>
               </AccordionSummary>
               <AccordionDetails>
-                <List dense>
-                  <ListItem><ListItemText primary="Vitals" secondary={`BP: ${visit.vitals.bp}, Temp: ${visit.vitals.temp}, Pulse: ${visit.vitals.pulse}, SpO2: ${visit.vitals.spo2}` } /></ListItem>
-                  <ListItem><ListItemText primary="Physical Examination" secondary={visit.examination.general} /></ListItem>
-                  <ListItem><ListItemText primary="Prescription" secondary={visit.prescription.join(', ')} /></ListItem>
-                </List>
+                <Box>
+                  <Typography variant="subtitle1" gutterBottom><strong>Presenting Complaint:</strong> {visit.presentingComplaint}</Typography>
+                  <Typography variant="subtitle1" gutterBottom><strong>History:</strong> {visit.previousHistory}</Typography>
+                  
+                  <Typography variant="h6" sx={{ mt: 2 }}>Vitals</Typography>
+                  <Typography>
+                    H.R: {visit.vitals.hr}, B.P: {visit.vitals.bp}, R.R: {visit.vitals.rr}, Temp: {visit.vitals.temp}, BSR: {visit.vitals.bsr}
+                  </Typography>
+
+                  <Typography variant="h6" sx={{ mt: 2 }}>Physical Examination</Typography>
+                  <Typography><strong>General:</strong> {visit.physicalExamination.general}</Typography>
+                  <Typography><strong>CVS:</strong> {visit.physicalExamination.cvs}</Typography>
+                  <Typography><strong>Resp:</strong> {visit.physicalExamination.resp}</Typography>
+                  <Typography><strong>Abd:</strong> {visit.physicalExamination.abd}</Typography>
+                  <Typography><strong>Neuro:</strong> {visit.physicalExamination.neuro}</Typography>
+
+                  <Typography variant="h6" sx={{ mt: 2 }}>Prescription</Typography>
+                  <List dense>
+                    {visit.prescription.map((p, i) => (
+                      <ListItem key={i}><ListItemText primary={`${p.medicine}`} secondary={`Dose: ${p.dose}, Frequency: ${p.frequency}`} /></ListItem>
+                    ))}
+                  </List>
+                </Box>
               </AccordionDetails>
             </Accordion>
           )) : <Typography>No visit history found.</Typography>}
